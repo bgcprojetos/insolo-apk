@@ -6,6 +6,10 @@ android {
     namespace = "br.com.bgcprojetos.insolo"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "br.com.bgcprojetos.insolo"
         minSdk = 24
