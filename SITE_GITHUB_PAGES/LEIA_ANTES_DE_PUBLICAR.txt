@@ -1,0 +1,3 @@
+Este é o index.html configurado do INSOLO. Use-o somente se o seu GitHub Pages ainda não tiver recebido a versão conectada ao Supabase.
+
+No repositório do site (bgcprojetos/Insolo), substitua o index.html antigo por este arquivo e confirme que o endereço https://bgcprojetos.github.io/Insolo/ abre normalmente antes de gerar/instalar o APK.

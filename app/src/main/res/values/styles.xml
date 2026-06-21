@@ -1,0 +1,11 @@
+<resources>
+    <style name="Theme.Insolo" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:statusBarColor">@color/insolo_primary</item>
+        <item name="android:navigationBarColor">@color/insolo_surface</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">@color/insolo_primary</item>
+    </style>
+</resources>
