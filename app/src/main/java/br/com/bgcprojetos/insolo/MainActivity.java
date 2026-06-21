@@ -91,7 +91,7 @@ public class MainActivity extends android.app.Activity {
         cookies.setAcceptCookie(true);
         cookies.setAcceptThirdPartyCookies(webView, false);
 
-        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
+    
 
         webView.setWebViewClient(new InsoloWebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
