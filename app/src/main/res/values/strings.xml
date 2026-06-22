@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">INSOLO</string>
-    <string name="loading">Carregando INSOLO…</string>
-    <string name="offline_title">Não foi possível abrir o INSOLO</string>
-    <string name="offline_message">Confira sua conexão com a internet e tente novamente.</string>
-    <string name="try_again">Tentar novamente</string>
-</resources>
