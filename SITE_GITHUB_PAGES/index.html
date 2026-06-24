@@ -843,34 +843,56 @@
             }
 
             async function fetchProfile(user) {
-                const { data, error } = await db
-                    .from('profiles')
-                    .select('id, nome, papel')
-                    .eq('id', user.id)
-                    .maybeSingle();
+    const { data, error } = await db
+        .from('profiles')
+        .select('id, nome, papel, status')
+        .eq('id', user.id)
+        .maybeSingle();
 
-                if (error) {
-                    console.warn('Não foi possível carregar o perfil:', error.message);
-                    return { nome: user.user_metadata?.nome || user.email, papel: 'operador' };
-                }
+    if (error) {
+        console.warn('Não foi possível carregar o perfil:', error.message);
+        return {
+            nome: user.user_metadata?.nome || user.email,
+            papel: 'operador',
+            status: 'pendente'
+        };
+    }
 
-                return data || { nome: user.user_metadata?.nome || user.email, papel: 'operador' };
-            }
+    return data || {
+        nome: user.user_metadata?.nome || user.email,
+        papel: 'operador',
+        status: 'pendente'
+    };
+}
 
             async function showAppView(user) {
-                currentUser = user;
-                currentProfile = await fetchProfile(user);
-                const name = currentProfile.nome || user.email;
-                const role = currentProfile.papel === 'gestor' ? 'Gestor' : 'Operador';
+    currentUser = user;
+    currentProfile = await fetchProfile(user);
 
-                $('headerUser').textContent = `${name} · ${role}`;
-                $('userBadge').textContent = `${user.email} · Perfil: ${role}`;
+    if (currentProfile.status !== 'aprovado') {
+        await db.auth.signOut();
 
-                authView.hidden = true;
-                appView.hidden = false;
-                setTimeout(configureCanvas, 0);
-            }
+        showAuthView();
 
+        showMessage(
+            authMessage,
+            'Seu cadastro está aguardando aprovação do administrador.',
+            'error'
+        );
+
+        return;
+    }
+
+    const name = currentProfile.nome || user.email;
+    const role = currentProfile.papel === 'gestor' ? 'Gestor' : 'Operador';
+
+    $('headerUser').textContent = `${name} · ${role}`;
+    $('userBadge').textContent = `${user.email} · Perfil: ${role}`;
+
+    authView.hidden = true;
+    appView.hidden = false;
+    setTimeout(configureCanvas, 0);
+}
             // ---------------- Supabase/Auth ----------------
             async function initializeSupabase() {
                 setDefaultDates();
@@ -934,51 +956,57 @@
             });
 
             registerForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                if (!db) return;
+    event.preventDefault();
+    if (!db) return;
 
-                const button = $('registerBtn');
-                setButtonLoading(button, true, 'Criando conta...');
-                hideMessage(authMessage);
+    const button = $('registerBtn');
+    setButtonLoading(button, true, 'Criando conta...');
+    hideMessage(authMessage);
 
-                try {
-                    const { data, error } = await db.auth.signUp({
-                        email: $('registerEmail').value.trim(),
-                        password: $('registerPassword').value,
-                        options: {
-                            emailRedirectTo: APP_URL,
-                            data: { nome: $('registerName').value.trim() }
-                        }
-                    });
+    try {
+        const { data, error } = await db.auth.signUp({
+            email: $('registerEmail').value.trim(),
+            password: $('registerPassword').value,
+            options: {
+                emailRedirectTo: APP_URL,
+                data: { nome: $('registerName').value.trim() }
+            }
+        });
 
-                    if (error) throw error;
+        if (error) throw error;
 
-                    if (!data.session) {
-                        showMessage(authMessage, 'Conta criada. Verifique o e-mail para confirmar o cadastro antes de entrar.', 'success');
-                        switchAuthTab('login');
-                        $('loginEmail').value = $('registerEmail').value.trim();
-                    } else {
-                        showMessage(authMessage, 'Conta criada com sucesso.', 'success');
-                    }
-                } catch (error) {
-                    console.error(error);
-                    showMessage(authMessage, `Não foi possível criar a conta: ${error.message}`, 'error');
-                } finally {
-                    setButtonLoading(button, false);
-                }
-            });
+        const userId = data.user?.id;
 
-            $('logoutBtn').addEventListener('click', async () => {
-                if (!db) return;
-                try {
-                    const { error } = await db.auth.signOut();
-                    if (error) throw error;
-                } catch (error) {
-                    console.error(error);
-                    showMessage(appMessage, `Erro ao sair: ${error.message}`, 'error');
-                }
-            });
+        if (userId) {
+            const { error: profileError } = await db
+                .from('profiles')
+                .upsert({
+                    id: userId,
+                    nome: $('registerName').value.trim(),
+                    papel: 'operador',
+                    status: 'pendente'
+                });
 
+            if (profileError) throw profileError;
+        }
+
+        showMessage(
+            authMessage,
+            'Cadastro enviado. Aguarde aprovação do administrador.',
+            'success'
+        );
+
+        switchAuthTab('login');
+        $('loginEmail').value = $('registerEmail').value.trim();
+        registerForm.reset();
+
+    } catch (error) {
+        console.error(error);
+        showMessage(authMessage, `Não foi possível criar a conta: ${error.message}`, 'error');
+    } finally {
+        setButtonLoading(button, false);
+    }
+});
             // ---------------- Gravação do serviço ----------------
             function canvasToBlob() {
                 return new Promise((resolve, reject) => {
